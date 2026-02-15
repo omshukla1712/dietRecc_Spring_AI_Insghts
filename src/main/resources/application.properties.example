@@ -1,0 +1,13 @@
+
+server.port=8080
+spring.datasource.url=jdbc:postgresql://localhost:5432/diet_db
+spring.datasource.username=postgres
+spring.datasource.password=YOUR_DATABASE_PASSWORD_HERE
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
+ai.api.url=https://api.groq.com/openai/v1/chat/completions
+ai.api.key=${GROQ_API_KEY}
+# Disables the default Spring Security login for development
+spring.main.allow-bean-definition-overriding=true

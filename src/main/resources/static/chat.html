@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Chat with AI Nutritionist</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    body { background-color: #e5ddd5; height: 100vh; display: flex; flex-direction: column; }
+
+    /* Chat Container */
+    .chat-container { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+
+    /* Message Bubbles */
+    .message { max-width: 75%; padding: 10px 15px; border-radius: 15px; position: relative; font-size: 0.95rem; line-height: 1.4; }
+    .message.user { align-self: flex-end; background-color: #dcf8c6; border-bottom-right-radius: 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+    .message.assistant { align-self: flex-start; background-color: #ffffff; border-bottom-left-radius: 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+
+    /* Input Area */
+    .input-area { background: #f0f0f0; padding: 10px; border-top: 1px solid #ddd; }
+
+    /* Loading Animation */
+    .typing-indicator { font-style: italic; color: #888; font-size: 0.8rem; margin-left: 10px; display: none; }
+
+    /* Markdown Styles inside bubbles */
+    .message ul { padding-left: 20px; margin-bottom: 5px; }
+    .message p { margin-bottom: 5px; }
+  </style>
+</head>
+<body>
+
+<nav class="navbar navbar-dark bg-success">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="dashboard.html">⬅ Back to Dashboard</a>
+    <span class="navbar-text text-white">AI Nutritionist Chat</span>
+  </div>
+</nav>
+
+<div id="chatWindow" class="chat-container">
+</div>
+
+<div id="typingIndicator" class="typing-indicator">AI is typing...</div>
+
+<div class="input-area">
+  <div class="container">
+    <form id="chatForm" class="d-flex gap-2">
+      <input type="text" id="messageInput" class="form-control" placeholder="Ask about your diet..." autocomplete="off">
+      <button type="submit" class="btn btn-success">Send</button>
+    </form>
+  </div>
+</div>
+
+<script>
+  const username = sessionStorage.getItem('currentUser');
+  if (!username) window.location.href = 'login.html';
+
+  const chatWindow = document.getElementById('chatWindow');
+  const API_BASE = '/api/chat';
+
+  // 1. Load History on Startup
+  async function loadHistory() {
+      try {
+          const response = await fetch(`${API_BASE}/history?username=${username}`);
+          const messages = await response.json();
+          messages.forEach(msg => appendMessage(msg.role, msg.content));
+      } catch (e) {
+          console.error("Failed to load history", e);
+      }
+  }
+
+  // 2. Send Message Logic
+  document.getElementById('chatForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const input = document.getElementById('messageInput');
+      const text = input.value.trim();
+      if (!text) return;
+
+      // Show User Message immediately
+      appendMessage('user', text);
+      input.value = '';
+      showTyping(true);
+
+      try {
+          // Send to Backend
+          const response = await fetch(`${API_BASE}/send`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ username: username, message: text })
+          });
+
+          const data = await response.json();
+
+          // Show AI Response
+          appendMessage('assistant', data.response);
+
+      } catch (e) {
+          appendMessage('assistant', "Error: Could not reach the AI.");
+      } finally {
+          showTyping(false);
+      }
+  });
+
+  // Helper: Add Message to Screen
+  function appendMessage(role, text) {
+      const div = document.createElement('div');
+      div.className = `message ${role}`;
+
+      // Parse Markdown (Bold, Lists) to HTML
+      div.innerHTML = marked.parse(text);
+
+      chatWindow.appendChild(div);
+
+      // Auto-scroll to bottom
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+  }
+
+  function showTyping(show) {
+      document.getElementById('typingIndicator').style.display = show ? 'block' : 'none';
+  }
+
+  // Load history when page opens
+  loadHistory();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sign Up</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>body { background-color: #f4f6f9; padding-top: 40px; }</style>
+</head>
+<body>
+<div class="container" style="max-width: 600px;">
+    <div class="card shadow p-4">
+        <h2 class="text-center text-primary mb-4">Create Account</h2>
+        <form id="signupForm">
+            <div class="row g-3">
+                <div class="col-12">
+                    <label>Username</label>
+                    <input type="text" class="form-control" id="username" required>
+                </div>
+                <div class="col-12">
+                    <label>Password</label>
+                    <input type="password" class="form-control" id="password" required>
+                </div>
+
+                <div class="col-md-6">
+                    <label>Age</label>
+                    <input type="number" class="form-control" id="age" required>
+                </div>
+                <div class="col-md-6">
+                    <label>Gender</label>
+                    <select class="form-select" id="gender">
+                        <option value="MALE">Male</option>
+                        <option value="FEMALE">Female</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label>Height (cm)</label>
+                    <input type="number" class="form-control" id="height" required>
+                </div>
+                <div class="col-md-6">
+                    <label>Weight (kg)</label>
+                    <input type="number" class="form-control" id="weight" required>
+                </div>
+
+                <div class="col-12">
+                    <label>Activity Level</label>
+                    <select class="form-select" id="activityLevel">
+                        <option value="SEDENTARY">Sedentary (Office Job)</option>
+                        <option value="LIGHTLY_ACTIVE">Light Exercise</option>
+                        <option value="MODERATELY_ACTIVE">Moderate Exercise</option>
+                        <option value="VERY_ACTIVE">Heavy Exercise</option>
+                        <option value="EXTRA_ACTIVE">Athlete</option>
+                    </select>
+                </div>
+                <div class="col-12">
+                    <label>Goal</label>
+                    <select class="form-select" id="goal">
+                        <option value="LOSE_WEIGHT">Lose Weight</option>
+                        <option value="MAINTAIN_WEIGHT">Maintain Weight</option>
+                        <option value="GAIN_MUSCLE">Gain Muscle</option>
+                    </select>
+                </div>
+
+                <div class="col-12 mt-4">
+                    <button type="submit" class="btn btn-primary w-100 py-2">Sign Up</button>
+                </div>
+                <div class="col-12 text-center">
+                    <a href="login.html">Already have an account? Login</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.getElementById('signupForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        // Collect Data
+        const formData = {
+            username: document.getElementById('username').value,
+            password: document.getElementById('password').value,
+            age: parseInt(document.getElementById('age').value),
+            gender: document.getElementById('gender').value,
+            height: parseFloat(document.getElementById('height').value),
+            weight: parseFloat(document.getElementById('weight').value),
+            activityLevel: document.getElementById('activityLevel').value,
+            goal: document.getElementById('goal').value
+        };
+
+        // Send to Backend
+        const response = await fetch('/api/auth/signup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+        });
+
+        if (response.ok) {
+            alert("Account created! Redirecting to login...");
+            window.location.href = 'login.html';
+        } else {
+            const errorText = await response.text();
+            alert("Error: " + errorText);
+        }
+    });
+</script>
+</body>
+</html>
