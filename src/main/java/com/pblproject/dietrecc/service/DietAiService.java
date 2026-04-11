@@ -34,6 +34,10 @@ public class DietAiService {
     @Value("${ai.api.key}")
     private String apiKey;
 
+    @Value("${ai.api.model}")
+    private String modelId;
+
+
     public DietAiService(FoodRepo foodRepo, DietPlanRepo dietPlanRepo, ChatMessageRepo chatMessageRepo) {
         this.foodRepo = foodRepo;
         this.dietPlanRepo = dietPlanRepo;
@@ -64,6 +68,8 @@ public class DietAiService {
         return aiResponse;
     }
 
+
+
     public String chatWithAi(User user, String userMessage) {
         ChatMessage userMsg = new ChatMessage(user, "user", userMessage);
         chatMessageRepo.save(userMsg);
@@ -92,33 +98,60 @@ public class DietAiService {
         return aiReply;
     }
 
-    private String callGroqApi(String prompt) {
-        List<Map<String, String>> messages = List.of(Map.of("role", "user", "content", prompt));
-        return callGroqApiWithHistory(messages);
-    }
-
     private String callGroqApiWithHistory(List<Map<String, String>> messages) {
-        Map<String, Object> requestBody = new HashMap<>();
-        requestBody.put("model", "llama-3.1-8b-instant");
-        requestBody.put("messages", messages);
-
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(apiKey);
+
+        // .trim() removes any accidental spaces from application.properties
+        String cleanModelId = modelId.trim();
+
+        Map<String, Object> requestBody = Map.of(
+                "model", cleanModelId,
+                "messages", messages
+        );
+
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
 
         try {
-            ResponseEntity<String> response = restTemplate.exchange(
-                    apiUrl, HttpMethod.POST, entity, String.class);
+            // Using postForEntity and Map.class, exactly like your Expense project
+            ResponseEntity<Map> response = restTemplate.postForEntity(apiUrl, entity, Map.class);
 
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode root = mapper.readTree(response.getBody());
+            // Extracting the response cleanly without ObjectMapper
+            List<Map> choices = (List<Map>) response.getBody().get("choices");
+            Map message = (Map) choices.get(0).get("message");
 
-            if (root.has("choices") && root.get("choices").size() > 0) {
-                return root.get("choices").get(0).get("message").get("content").asText();
-            } else {
-                return "Error: AI returned empty response.";
-            }
+            return message.get("content").toString();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Error calling AI: " + e.getMessage();
+        }
+    }
+    private String callGroqApi(String prompt) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(apiKey);
+
+        // .trim() removes any accidental spaces
+        String cleanModelId = modelId.trim();
+
+        Map<String, Object> requestBody = Map.of(
+                "model", cleanModelId,
+                "messages", List.of(
+                        Map.of("role", "user", "content", prompt) // Single prompt format
+                )
+        );
+
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
+
+        try {
+            ResponseEntity<Map> response = restTemplate.postForEntity(apiUrl, entity, Map.class);
+
+            List<Map> choices = (List<Map>) response.getBody().get("choices");
+            Map message = (Map) choices.get(0).get("message");
+
+            return message.get("content").toString();
 
         } catch (Exception e) {
             e.printStackTrace();
