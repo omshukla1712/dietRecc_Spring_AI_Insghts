@@ -14,10 +14,7 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -47,25 +44,42 @@ public class DietAiService {
 
     public String generateDietPlan(User user, int targetCalories) {
         List<FoodItem> availableFoods = foodRepo.findAll();
-        String foodList = availableFoods.stream()
-                .map(food -> food.getName() + " (" + food.getCalories() + " cal)")
-                .collect(Collectors.joining(", "));
-        String prompt = String.format(
-                "You are a nutritionist. Create a 1-day meal plan for a %d-year-old %s whose goal is %s. " +
-                        "Daily target: exactly %d calories. " +
-                        "RESTRICTION: You MUST ONLY use these foods: [%s]. " +
-                        "Format clearly with Breakfast, Lunch, Dinner, and Snacks.",
-                user.getAge(), user.getGender(), user.getGoal(), targetCalories, foodList
-        );
-
-        String aiResponse = callGroqApi(prompt);
-
-        if (aiResponse != null && !aiResponse.startsWith("Error")) {
-            DietPlan newPlan = new DietPlan(user, aiResponse, targetCalories, user.getGoal().toString());
-            dietPlanRepo.save(newPlan);
+        StringBuilder foodList = new StringBuilder();
+        for (FoodItem item : availableFoods) {
+            foodList.append(item.getName()).append(", ");
         }
+        List<ChatMessage> recentChats = chatMessageRepo.findTop5ByUserIdOrderByTimestampDesc(user.getId());
+        Collections.reverse(recentChats);
 
-        return aiResponse;
+        StringBuilder chatContext = new StringBuilder();
+        if (!recentChats.isEmpty()) {
+            chatContext.append("CRUCIAL CONTEXT - The user recently mentioned the following preferences in chat:\n");
+            for (ChatMessage msg : recentChats) {
+                // We only care about what the USER said to extract their preferences
+                if (msg.getRole().equals("user")) {
+                    chatContext.append("- ").append(msg.getContent()).append("\n");
+                }
+            }
+            chatContext.append("You MUST strictly respect any dietary restrictions, preferences, or requests mentioned in the context above when creating this new plan.\n\n");
+        }
+        String prompt = "Create a daily diet plan targeting " + targetCalories + " calories for a " +
+                user.getAge() + " year old " + user.getGender() + " weighing " + user.getWeight() + "kg. " +
+                "Their primary goal is " + user.getGoal() + ".\n\n" +
+
+                chatContext.toString() + // <-- INJECT THE CONTEXT HERE
+
+                "Constraint: You MUST ONLY use the following available foods: " + foodList.toString();
+
+        String generatedPlanText = callGroqApi(prompt);
+
+
+        DietPlan newPlan = new DietPlan();
+        newPlan.setUser(user);
+        newPlan.setTargetCalories(targetCalories);
+        newPlan.setPlanDetails(generatedPlanText);
+        dietPlanRepo.save(newPlan);
+
+        return generatedPlanText;
     }
 
 
