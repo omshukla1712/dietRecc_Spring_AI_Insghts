@@ -82,6 +82,35 @@ public class DietAiService {
         return generatedPlanText;
     }
 
+    public DietPlan importPlanFromChat(Long messageId, User currentUser) {
+        ChatMessage message = chatMessageRepo.findById(messageId)
+                .orElseThrow(() -> new RuntimeException("Chat message not found"));
+
+        //Security Check: Prevent User A from importing User B's message
+        if (!message.getUser().getId().equals(currentUser.getId())) {
+            throw new RuntimeException("Unauthorized: You do not have permission to import this message");
+        }
+
+        //Validation: Ensure they are importing the AI's response, not their own question
+        // Note: Groq typically uses "assistant" for the AI's role
+        if (!"assistant".equals(message.getRole())) {
+            throw new RuntimeException("You can only import AI-generated meal plans, not your own prompts.");
+        }
+
+        // Create the new Diet Plan
+        DietPlan importedPlan = new DietPlan();
+        importedPlan.setUser(currentUser);
+
+        // Use the actual text from the chat message as the new plan
+        importedPlan.setPlanDetails(message.getContent());
+
+        // Note: If your DietPlan requires a targetCalories field, you can pull it
+        // from the currentUser object if you save it there, e.g., currentUser.getTargetCalories()
+        // importedPlan.setDailyCalories(...);
+
+        // Save and promote to the main dashboard
+        return dietPlanRepo.save(importedPlan);
+    }
 
 
     public String chatWithAi(User user, String userMessage) {

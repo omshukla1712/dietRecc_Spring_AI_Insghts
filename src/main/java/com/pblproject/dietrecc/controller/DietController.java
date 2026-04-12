@@ -7,10 +7,9 @@ import com.pblproject.dietrecc.service.DietAiService; // <-- Updated Import
 import com.pblproject.dietrecc.service.DietCalculatorService;
 import com.pblproject.dietrecc.repo.DietPlanRepo;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/diet")
@@ -30,6 +29,7 @@ public class DietController {
         this.aiService = aiService;
         this.dietPlanRepo = dietPlanRepo;
     }
+
 
     @GetMapping("/calculate")
     public ResponseEntity<DietResponse> getDietPlan(@RequestParam String username) {
@@ -59,5 +59,38 @@ public class DietController {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         return ResponseEntity.ok(dietPlanRepo.findByUserIdOrderByCreatedAtDesc(user.getId()));
+    }
+    @PostMapping("/import-from-chat")
+    public ResponseEntity<?> importFromChat(@RequestParam Long messageId) {
+        try {
+            // 1. Get the currently logged-in user
+            User currentUser = getCurrentUser();
+
+            // 2. Call the service to do the heavy lifting
+
+            aiService.importPlanFromChat(messageId, currentUser);
+
+            // 3. Return a JSON success response
+            return ResponseEntity.ok(Map.of(
+                    "status", "success",
+                    "message", "Diet plan successfully updated from chat!"
+            ));
+        } catch (Exception e) {
+            // Return a clean error message if the security check fails or message isn't found
+            return ResponseEntity.badRequest().body(Map.of(
+                    "status", "error",
+                    "message", e.getMessage()
+            ));
+        }
+    }
+
+    private User getCurrentUser() {
+        String username = org.springframework.security.core.context.SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getName();
+
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Authenticated user not found"));
     }
 }
