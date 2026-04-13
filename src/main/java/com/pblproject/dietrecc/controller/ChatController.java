@@ -34,8 +34,13 @@ public class ChatController {
         User user = userRepo.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        String response = aiService.chatWithAi(user, message);
-        return ResponseEntity.ok(Map.of("response", response));
+        ChatMessage aiMsg = aiService.chatWithAi(user, message);
+
+        // Return BOTH the text and the database ID
+        return ResponseEntity.ok(Map.of(
+                "response", aiMsg.getContent(),
+                "messageId", aiMsg.getId()
+        ));
     }
 
     @GetMapping("/history")
@@ -43,6 +48,7 @@ public class ChatController {
         User user = userRepo.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        return ResponseEntity.ok(chatMessageRepo.findByUserIdOrderByTimestampDesc(user.getId()));
+        // FIXED: Sort Ascending so the conversation reads chronologically!
+        return ResponseEntity.ok(chatMessageRepo.findByUserIdOrderByTimestampAsc(user.getId()));
     }
 }

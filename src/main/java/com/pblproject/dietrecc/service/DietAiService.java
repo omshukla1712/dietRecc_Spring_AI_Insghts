@@ -113,7 +113,7 @@ public class DietAiService {
     }
 
 
-    public String chatWithAi(User user, String userMessage) {
+    public ChatMessage chatWithAi(User user, String userMessage) {
         ChatMessage userMsg = new ChatMessage(user, "user", userMessage);
         chatMessageRepo.save(userMsg);
         List<ChatMessage> history = chatMessageRepo.findByUserIdOrderByTimestampAsc(user.getId());
@@ -133,12 +133,14 @@ public class DietAiService {
         for (ChatMessage msg : history) {
             messages.add(Map.of("role", msg.getRole(), "content", msg.getContent()));
         }
+
         String aiReply = callGroqApiWithHistory(messages);
+
+        ChatMessage aiMsg = new ChatMessage(user, "assistant", aiReply);
         if (aiReply != null && !aiReply.startsWith("Error")) {
-            ChatMessage aiMsg = new ChatMessage(user, "assistant", aiReply);
-            chatMessageRepo.save(aiMsg);
+            aiMsg = chatMessageRepo.save(aiMsg); // Saves to DB and generates the ID
         }
-        return aiReply;
+        return aiMsg; // Returns the full object
     }
 
     private String callGroqApiWithHistory(List<Map<String, String>> messages) {

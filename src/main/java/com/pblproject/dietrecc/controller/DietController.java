@@ -62,22 +62,19 @@ public class DietController {
         return ResponseEntity.ok(dietPlanRepo.findByUserIdOrderByCreatedAtDesc(user.getId()));
     }
     @PostMapping("/import-from-chat")
-    public ResponseEntity<?> importFromChat(@RequestParam Long messageId) {
+    public ResponseEntity<?> importFromChat(@RequestParam Long messageId, @RequestParam String username) {
         try {
-            // 1. Get the currently logged-in user
-            User currentUser = getCurrentUser();
-
-            // 2. Call the service to do the heavy lifting
+            // FIXED: Get user via frontend session username instead of Spring Security context
+            User currentUser = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
 
             aiService.importPlanFromChat(messageId, currentUser);
 
-            // 3. Return a JSON success response
             return ResponseEntity.ok(Map.of(
                     "status", "success",
                     "message", "Diet plan successfully updated from chat!"
             ));
         } catch (Exception e) {
-            // Return a clean error message if the security check fails or message isn't found
             return ResponseEntity.badRequest().body(Map.of(
                     "status", "error",
                     "message", e.getMessage()
@@ -85,15 +82,7 @@ public class DietController {
         }
     }
 
-    private User getCurrentUser() {
-        String username = org.springframework.security.core.context.SecurityContextHolder
-                .getContext()
-                .getAuthentication()
-                .getName();
 
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("Authenticated user not found"));
-    }
     @GetMapping("/active")
     public ResponseEntity<?> getActivePlan(@RequestParam String username) {
         User user = userRepository.findByUsername(username)
