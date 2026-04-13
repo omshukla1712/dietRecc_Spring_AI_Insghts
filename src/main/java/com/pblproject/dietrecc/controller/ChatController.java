@@ -42,6 +42,6 @@ public class ChatController {
         User user = userRepo.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        return ResponseEntity.ok(chatMessageRepo.findByUserIdOrderByTimestampAsc(user.getId()));
+        return ResponseEntity.ok(chatMessageRepo.findByUserIdOrderByTimestampDesc(user.getId()));
     }
 }

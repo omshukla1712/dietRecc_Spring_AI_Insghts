@@ -42,22 +42,16 @@
     </div>
   </div>
 </div>
-
 <script>
-  // Check if user is logged in
+  // 1. DECLARE CONSTANTS FIRST
+  const API_BASE = '/api/diet';
   const username = sessionStorage.getItem('currentUser');
-  if (!username) {
-      window.location.href = 'login.html';
-  } else {
-      document.getElementById('welcomeMsg').innerText = `Hello, ${username}!`;
-  }
 
+  // 2. DEFINE FUNCTIONS
   function logout() {
       sessionStorage.clear();
       window.location.href = 'index.html';
   }
-
-  const API_BASE = '/api/diet';
 
   async function generatePlan() {
       showLoading(true);
@@ -68,6 +62,41 @@
       } catch (e) {
           alert("Error generating plan");
       } finally { showLoading(false); }
+  }
+
+  async function loadActivePlan() {
+      showLoading(true);
+      try {
+          const response = await fetch(`${API_BASE}/active?username=${username}`);
+
+          // If the backend returns 204 No Content (meaning they have no plans yet)
+          if (response.status === 204) {
+              document.getElementById('contentArea').innerHTML =
+                  '<div class="alert alert-info">No active plan found. Click "Generate" to get started!</div>';
+              return;
+          }
+
+          if (response.ok) {
+              const plan = await response.json();
+              const date = new Date(plan.createdAt).toLocaleString();
+
+              // Clear the placeholder text
+              document.getElementById('contentArea').innerHTML = '';
+
+              // Render the active plan
+              renderCard(
+                  `✨ Current Active Plan`,
+                  marked.parse(plan.planDetails),
+                  `Target: ${plan.targetCalories || 'Custom'} kcal | Updated: ${date}`
+              );
+          }
+      } catch (e) {
+          console.error("Error loading active plan", e);
+          document.getElementById('contentArea').innerHTML =
+              '<div class="alert alert-danger">Error loading your active plan.</div>';
+      } finally {
+          showLoading(false);
+      }
   }
 
   async function loadHistory() {
@@ -104,6 +133,15 @@
 
   function showLoading(show) {
       document.getElementById('loadingSpinner').style.display = show ? 'block' : 'none';
+  }
+
+  // 3. EXECUTE INITIALIZATION LOGIC LAST
+  // Now that everything is defined, it is safe to run the startup checks.
+  if (!username) {
+      window.location.href = 'login.html';
+  } else {
+      document.getElementById('welcomeMsg').innerText = `Hello, ${username}!`;
+      loadActivePlan();
   }
 </script>
 </body>

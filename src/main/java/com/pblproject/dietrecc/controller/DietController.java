@@ -93,4 +93,13 @@ public class DietController {
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Authenticated user not found"));
     }
+    @GetMapping("/active")
+    public ResponseEntity<?> getActivePlan(@RequestParam String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return dietPlanRepo.findFirstByUserIdOrderByCreatedAtDesc(user.getId())
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.noContent().build()); // Returns 204 if they have no plans yet
+    }
 }
