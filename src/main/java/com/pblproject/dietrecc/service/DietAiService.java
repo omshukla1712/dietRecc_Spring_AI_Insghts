@@ -55,7 +55,6 @@ public class DietAiService {
         if (!recentChats.isEmpty()) {
             chatContext.append("CRUCIAL CONTEXT - The user recently mentioned the following preferences in chat:\n");
             for (ChatMessage msg : recentChats) {
-                // We only care about what the USER said to extract their preferences
                 if (msg.getRole().equals("user")) {
                     chatContext.append("- ").append(msg.getContent()).append("\n");
                 }
@@ -66,7 +65,7 @@ public class DietAiService {
                 user.getAge() + " year old " + user.getGender() + " weighing " + user.getWeight() + "kg. " +
                 "Their primary goal is " + user.getGoal() + ".\n\n" +
 
-                chatContext.toString() + // <-- INJECT THE CONTEXT HERE
+                chatContext.toString() +
 
                 "Constraint: You MUST ONLY use the following available foods: " + foodList.toString();
 
@@ -103,10 +102,6 @@ public class DietAiService {
 
         // Use the actual text from the chat message as the new plan
         importedPlan.setPlanDetails(message.getContent());
-
-        // Note: If your DietPlan requires a targetCalories field, you can pull it
-        // from the currentUser object if you save it there, e.g., currentUser.getTargetCalories()
-        // importedPlan.setDailyCalories(...);
 
         // Save and promote to the main dashboard
         return dietPlanRepo.save(importedPlan);
@@ -159,10 +154,8 @@ public class DietAiService {
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
 
         try {
-            // Using postForEntity and Map.class, exactly like your Expense project
             ResponseEntity<Map> response = restTemplate.postForEntity(apiUrl, entity, Map.class);
 
-            // Extracting the response cleanly without ObjectMapper
             List<Map> choices = (List<Map>) response.getBody().get("choices");
             Map message = (Map) choices.get(0).get("message");
 
@@ -178,7 +171,6 @@ public class DietAiService {
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(apiKey);
 
-        // .trim() removes any accidental spaces
         String cleanModelId = modelId.trim();
 
         Map<String, Object> requestBody = Map.of(
@@ -192,7 +184,6 @@ public class DietAiService {
 
         try {
             ResponseEntity<Map> response = restTemplate.postForEntity(apiUrl, entity, Map.class);
-
             List<Map> choices = (List<Map>) response.getBody().get("choices");
             Map message = (Map) choices.get(0).get("message");
 

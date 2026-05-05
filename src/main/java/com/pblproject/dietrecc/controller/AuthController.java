@@ -3,7 +3,7 @@ package com.pblproject.dietrecc.controller;
 import com.pblproject.dietrecc.model.User;
 import com.pblproject.dietrecc.repo.UserRepo;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder; // Ensure you have this dependency or use raw string for now if security config is minimal
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;

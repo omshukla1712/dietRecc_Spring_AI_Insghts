@@ -55,6 +55,7 @@ public class DietController {
         String aiMealPlan = aiService.generateDietPlan(user, targetCalories);
         return ResponseEntity.ok(aiMealPlan);
     }
+
     @GetMapping("/history")
     public ResponseEntity<?> getDietHistory(@RequestParam String username) {
         User user = userRepository.findByUsername(username)
