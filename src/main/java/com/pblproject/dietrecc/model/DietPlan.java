@@ -2,6 +2,7 @@ package com.pblproject.dietrecc.model;
 
 import jakarta.persistence.*;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
@@ -12,6 +13,7 @@ import java.time.LocalDateTime;
 @Table(name = "diet_plans")
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
 public class DietPlan {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

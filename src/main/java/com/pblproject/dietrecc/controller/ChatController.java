@@ -5,6 +5,7 @@ import com.pblproject.dietrecc.model.User;
 import com.pblproject.dietrecc.repo.ChatMessageRepo;
 import com.pblproject.dietrecc.repo.UserRepo;
 import com.pblproject.dietrecc.service.DietAiService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,17 +15,12 @@ import java.util.Map;
 @CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/api/chat")
+@RequiredArgsConstructor
 public class ChatController {
 
     private final DietAiService aiService;
     private final UserRepo userRepo;
     private final ChatMessageRepo chatMessageRepo;
-
-    public ChatController(DietAiService aiService, UserRepo userRepo, ChatMessageRepo chatMessageRepo) {
-        this.aiService = aiService;
-        this.userRepo = userRepo;
-        this.chatMessageRepo = chatMessageRepo;
-    }
 
     @PostMapping("/send")
     public ResponseEntity<?> sendMessage(@RequestBody Map<String, String> payload) {

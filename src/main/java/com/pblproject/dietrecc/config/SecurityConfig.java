@@ -23,7 +23,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable()) // Allow POST requests
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**", "/api/diet/**", "/api/chat/**").permitAll()
-                        .requestMatchers("/", "/index.html", "/signup.html", "/login.html", "/dashboard.html", "/chat.html").permitAll()
+                        .requestMatchers("/", "/index.html", "/signup.html", "/login.html", "/dashboard.html", "/chat.html", "/api/user/**").permitAll()
                         .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
                         .anyRequest().authenticated()
                 )

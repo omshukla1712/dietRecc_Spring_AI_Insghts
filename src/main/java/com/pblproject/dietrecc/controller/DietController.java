@@ -3,9 +3,9 @@ package com.pblproject.dietrecc.controller;
 import com.pblproject.dietrecc.dto.DietResponse;
 import com.pblproject.dietrecc.model.User;
 import com.pblproject.dietrecc.repo.UserRepo;
-import com.pblproject.dietrecc.service.DietAiService; // <-- Updated Import
+import com.pblproject.dietrecc.service.DietAiService;
 import com.pblproject.dietrecc.service.DietCalculatorService;
-import com.pblproject.dietrecc.repo.DietPlanRepo;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,24 +14,13 @@ import java.util.Map;
 @CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/api/diet")
+@RequiredArgsConstructor
 public class DietController {
 
     private final UserRepo userRepository;
     private final DietCalculatorService dietCalculator;
     private final DietAiService aiService;
     private final com.pblproject.dietrecc.repo.DietPlanRepo dietPlanRepo;
-
-    public DietController(UserRepo userRepository,
-                          DietCalculatorService dietCalculator,
-                          DietAiService aiService,
-                          com.pblproject.dietrecc.repo.DietPlanRepo dietPlanRepo) { // <--- NEW
-        this.userRepository = userRepository;
-        this.dietCalculator = dietCalculator;
-        this.aiService = aiService;
-        this.dietPlanRepo = dietPlanRepo;
-    }
-
-
     @GetMapping("/calculate")
     public ResponseEntity<DietResponse> getDietPlan(@RequestParam String username) {
 

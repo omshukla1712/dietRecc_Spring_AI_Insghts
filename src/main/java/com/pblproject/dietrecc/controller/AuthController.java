@@ -2,6 +2,7 @@ package com.pblproject.dietrecc.controller;
 
 import com.pblproject.dietrecc.model.User;
 import com.pblproject.dietrecc.repo.UserRepo;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -11,14 +12,11 @@ import java.util.Optional;
 @CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/api/auth")
+@RequiredArgsConstructor
 public class AuthController {
 
     private final UserRepo userRepo;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-
-    public AuthController(UserRepo userRepo) {
-        this.userRepo = userRepo;
-    }
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@RequestBody User user) {
         if (userRepo.findByUsername(user.getUsername()).isPresent()) {

@@ -1,7 +1,5 @@
 package com.pblproject.dietrecc.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pblproject.dietrecc.model.ChatMessage;
 import com.pblproject.dietrecc.model.DietPlan;
 import com.pblproject.dietrecc.model.FoodItem;
@@ -9,6 +7,7 @@ import com.pblproject.dietrecc.model.User;
 import com.pblproject.dietrecc.repo.ChatMessageRepo;
 import com.pblproject.dietrecc.repo.DietPlanRepo;
 import com.pblproject.dietrecc.repo.FoodRepo;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -18,6 +17,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class DietAiService {
 
     private final FoodRepo foodRepo;
@@ -33,14 +33,6 @@ public class DietAiService {
 
     @Value("${ai.api.model}")
     private String modelId;
-
-
-    public DietAiService(FoodRepo foodRepo, DietPlanRepo dietPlanRepo, ChatMessageRepo chatMessageRepo) {
-        this.foodRepo = foodRepo;
-        this.dietPlanRepo = dietPlanRepo;
-        this.chatMessageRepo = chatMessageRepo;
-        this.restTemplate = new RestTemplate();
-    }
 
     public String generateDietPlan(User user, int targetCalories) {
         List<FoodItem> availableFoods = foodRepo.findAll();
